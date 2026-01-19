@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import SidebarNav from './components/layout/SidebarNav';
@@ -8,9 +8,7 @@ import Analytics from './pages/Analytics';
 import Checkin from './pages/Checkin';
 import Checkout from './pages/Checkout';
 import Reports from './pages/Reports';
-import Settings from './pages/Settings'; // <--- NUEVA IMPORTACIÓN
 import Login from './pages/Login';
-import Resources from './pages/Resources';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,11 +22,11 @@ const queryClient = new QueryClient({
 
 function AppLayout({ children }) {
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="flex h-screen bg-gray-50">
       <SidebarNav />
       <div className="flex-1 ml-64">
         <TopBar />
-        <main className="mt-16 overflow-auto h-[calc(100vh-4rem)] dark:text-gray-100">
+        <main className="mt-16 overflow-auto h-[calc(100vh-4rem)]">
           {children}
         </main>
       </div>
@@ -36,79 +34,56 @@ function AppLayout({ children }) {
   );
 }
 
-function ProtectedRoute({ children }) {
+function App() {
   const isAuthenticated = !!localStorage.getItem('token');
-  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated && window.location.pathname !== '/login') {
+    return <Navigate to="/login" />;
   }
 
-  return <AppLayout>{children}</AppLayout>;
-}
-
-function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <AppLayout>
                 <Dashboard />
-              </ProtectedRoute>
+              </AppLayout>
             }
           />
           <Route
             path="/analytics"
             element={
-              <ProtectedRoute>
+              <AppLayout>
                 <Analytics />
-              </ProtectedRoute>
+              </AppLayout>
             }
           />
           <Route
             path="/reports"
             element={
-              <ProtectedRoute>
+              <AppLayout>
                 <Reports />
-              </ProtectedRoute>
+              </AppLayout>
             }
           />
           <Route
             path="/checkin"
             element={
-              <ProtectedRoute>
+              <AppLayout>
                 <Checkin />
-              </ProtectedRoute>
+              </AppLayout>
             }
-          />
-          <Route
-          path="/resources"
-          element={
-            <ProtectedRoute>
-              <Resources />
-            </ProtectedRoute>
-          }
           />
           <Route
             path="/checkout"
             element={
-              <ProtectedRoute>
+              <AppLayout>
                 <Checkout />
-              </ProtectedRoute>
-            }
-          />
-          {/* NUEVA RUTA DE CONFIGURACIÓN */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
+              </AppLayout>
             }
           />
         </Routes>

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # --- BACKEND (Cerebro) ---
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: waterlog_backend
+    # Comando para desarrollo con reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app                # Sincroniza código en tiempo real
+      - ./data:/app/data              # Persistencia de SQLite (carpeta local)
+      - ./uploads:/app/uploads        # Evidencias (fotos)
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/waterlog.db
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - PLANT_ID=${PLANT_ID:-1}
+      - ENVIRONMENT=development
+    networks:
+      - waterlog_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --- FRONTEND (Interfaz) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: waterlog_frontend
+    # Importante: host 0.0.0.0 para que Docker lo exponga
+    command: npm run dev -- --host 0.0.0.0 --port 3001
+    ports:
+      - "3001:3001"  # <--- CAMBIO: Usamos 3001 para evitar conflictos comunes
+    environment:
+      # URL para que el navegador encuentre al backend
+      - VITE_API_URL=http://localhost:8000 
+      - VITE_PLANT_NAME=${PLANT_NAME:-Planta Centro}
+      # <--- TRUCO DE GUERRA PARA WINDOWS: Fuerza la detección de cambios de archivos
+      - CHOKIDAR_USEPOLLING=true 
+    volumes:
+      - ./frontend:/app           # Sincroniza tus cambios de código al instante
+      - /app/node_modules         # <--- VITAL: Usa los módulos de Linux, no los de Windows
+    networks:
+      - waterlog_network
+    depends_on:
+      - backend
+    # Estas dos líneas mantienen la terminal de React interactiva y viva
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+networks:
+  waterlog_network:
+    driver: bridge
+
+# No necesitamos volúmenes nombrados si usamos bind mounts (./data)
+# así es más fácil que veas el archivo .db en tu carpeta de Windows.

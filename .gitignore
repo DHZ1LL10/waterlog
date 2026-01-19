@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+*.egg
+
+# FastAPI / Uvicorn
+.env
+.env.local
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+backups/
+
+# Node / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+.cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+.dockerignore
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Uploads / Evidence
+uploads/
+evidence/
+*.jpg
+*.jpeg
+*.png
+!public/*.png
+!public/*.jpg
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Backup scripts output
+*.backup
+*.sql
+
+# Temporal
+tmp/
+temp/
+.temp/
+
+# Misc
+*.bak
+*.old
+*.orig
+*.rej
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+# Docker & System
+.DS_Store
+*.log
+
+# Database
+*.db
+*.sqlite3
+data/
