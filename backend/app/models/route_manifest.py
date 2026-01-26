@@ -4,18 +4,14 @@ from datetime import datetime, date
 import enum
 from app.database import Base
 
-
 class AuditStatus(str, enum.Enum):
     """Estados del manifiesto de ruta"""
-    CREATED = "CREATED"                      # Ruta creada, inventario asignado
-    IN_PROGRESS = "IN_PROGRESS"  
-    DEBT = "DEBT"            # Chofer en ruta
+    CREATED = "CREATED"                  # Ruta creada, inventario asignado
+    IN_PROGRESS = "IN_PROGRESS"          # Chofer en ruta
+    DEBT = "DEBT"                        # (Deprecado en favor de LOCKED_DEBT)
     PENDING_RECONCILIATION = "PENDING_RECONCILIATION"  # Regresó, esperando validación
-    LOCKED_DEBT = "LOCKED_DEBT"              # Descuadre detectado, deuda pendiente
-    CLOSED = "CLOSED"                        # Cerrado exitosamente
-
-    
-
+    LOCKED_DEBT = "LOCKED_DEBT"          # Descuadre detectado, deuda pendiente
+    CLOSED = "CLOSED"                    # Cerrado exitosamente
 
 class RouteManifest(Base):
     """
@@ -66,6 +62,10 @@ class RouteManifest(Base):
     # Relationships
     driver = relationship("User", foreign_keys=[driver_id])
     truck = relationship("Truck")
+    
+    # === RELACIÓN DE VENTAS DETALLADAS (NUEVO) ===
+    # Permite acceder a route.sales_details para ver la lista de ventas
+    sales_details = relationship("SalesDetail", back_populates="route", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<RouteManifest #{self.id} - Driver:{self.driver_id} - {self.date} - {self.audit_status}>"

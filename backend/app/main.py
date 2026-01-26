@@ -13,9 +13,12 @@ from app.models.user import User
 from app.models.truck import Truck 
 from app.models.route_manifest import RouteManifest
 from app.models.audit_log import AuditLog
-from app.models.debt_record import DebtRecord # También vi este archivo en tu foto
+from app.models.debt_record import DebtRecord 
+from app.models.client import Client
+from app.models.sales_detail import SalesDetail # <--- IMPRESCINDIBLE
+
 # Routers
-from app.api.v1 import auth, reports, routes, resources
+from app.api.v1 import auth, reports, routes, resources, clients
 
 # Configurar logger
 logger.add(
@@ -32,7 +35,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Iniciando WaterLog - Planta {settings.PLANT_ID}")
     logger.info(f"Entorno: {settings.ENVIRONMENT}")
     
-    # Crear tablas si no existen (Aquí se crea 'audit_logs')
+    # Crear tablas si no existen (Aquí se crean 'sales_details', 'clients', etc.)
     Base.metadata.create_all(bind=engine)
     logger.info("Base de datos inicializada y tablas verificadas")
     
@@ -78,6 +81,7 @@ app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["
 app.include_router(routes.router, prefix=f"{settings.API_V1_PREFIX}/routes", tags=["routes"])
 app.include_router(reports.router, prefix=f"{settings.API_V1_PREFIX}/reports", tags=["reports"])
 app.include_router(resources.router, prefix=f"{settings.API_V1_PREFIX}/resources", tags=["resources"])
+app.include_router(clients.router, prefix=f"{settings.API_V1_PREFIX}/clients", tags=["clients"])
 
 # Health check
 @app.get("/health", tags=["system"])

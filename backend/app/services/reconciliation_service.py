@@ -1,46 +1,40 @@
 from app.models.route_manifest import AuditStatus
 
-
 def reconcile_route(
-    route,
-    returned_full: int,
-    returned_empty: int,
-    reported_damaged: int,
-    bottle_price: float,
-    evidence_verified: bool
+    route, 
+    returned_full: int, 
+    returned_empty: int, 
+    reported_damaged: int, 
+    calculated_sales_total: float, # Dinero total calculado desde la lista de ventas
+    total_units_sold_reported: int # Suma de garrafones en la lista de ventas
 ):
-    expected = route.initial_full_bottles + route.initial_empty_bottles
-    actual = returned_full + returned_empty + reported_damaged
-    delta = expected - actual
+    """
+    Lógica de conciliación: Inventario Físico vs Ventas Reportadas.
+    """
+    
+    # 1. Calcular Inventario Físico (Lo que DEBIÓ venderse según lo que falta en la camioneta)
+    initial_load = route.initial_full_bottles
+    physical_sold = initial_load - returned_full - reported_damaged
 
-    if delta == 0:
-        return {
-            "status": AuditStatus.CLOSED,
-            "debt": 0.0,
-            "message": "Ruta cerrada exitosamente. Inventario correcto.",
-            "delta": 0
-        }
+    # 2. Comparar Físico vs Reportado
+    # delta > 0: Faltan garrafones (Robo o error)
+    # delta < 0: Sobran garrafones (Error de carga o conteo)
+    delta_inventory = physical_sold - total_units_sold_reported
 
-    if delta > 0:
-        if reported_damaged > 0 and evidence_verified:
-            return {
-                "status": AuditStatus.CLOSED,
-                "debt": 0.0,
-                "message": f"Ruta cerrada. {reported_damaged} unidades dañadas con evidencia.",
-                "delta": delta
-            }
+    # 3. Determinar Estado y Deuda
+    status = AuditStatus.CLOSED
+    debt = calculated_sales_total
+    message = "Conciliación exitosa."
 
-        debt = delta * bottle_price
-        return {
-            "status": AuditStatus.LOCKED_DEBT,
-            "debt": debt,
-            "message": f"DESCUADRE DETECTADO. Faltan {delta} unidades. Deuda: ${debt:.2f}",
-            "delta": delta
-        }
+    if delta_inventory != 0:
+        status = AuditStatus.LOCKED_DEBT # Se bloquea porque no cuadran los envases
+        message = f"DESCUADRE DE INVENTARIO: Diferencia de {delta_inventory} garrafones entre físico y lista de ventas."
+    elif reported_damaged > 0:
+        message = f"Conciliado con {reported_damaged} mermas reportadas."
 
     return {
-        "status": AuditStatus.CLOSED,
-        "debt": 0.0,
-        "message": f"Ruta cerrada. Sobran {abs(delta)} unidades.",
-        "delta": delta
+        "status": status,
+        "debt": debt,
+        "inventory_diff": delta_inventory,
+        "message": message
     }
